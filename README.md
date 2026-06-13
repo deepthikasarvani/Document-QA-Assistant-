@@ -1,15 +1,22 @@
-1.	Objective:
-Allow users to upload documents (PDFs, Word files) and ask questions based on the content.
+# Gen AI
 
-2.	Tech Stack:
-LangChain, OpenAI API (GPT-4), ChromaDB or FAISS, Streamlit.
+Upload a PDF and ask questions about its content — the app extracts relevant context and returns an answer using a question-answering model.
 
-3.	Tools Used:
-•	Python: Used for developing the entire project, managing logic, and integrating different libraries.
-•	LangChain: Used to orchestrate conversational AI flows by integrating with OpenAI’s GPT-4 model.
-•	OpenAI GPT-4 API: Provides the powerful large language model behind the conversational responses.
-•	Hugging Face Transformers: Utilized the question-answering pipeline for extracting answers from documents.
-•	Streamlit: Used to build the interactive web app interface for user input and displaying answers.
-•	•  ChromaDB: Serves as a lightweight vector database to store and retrieve document embeddings for contextual Q&A.
-•	•  Sentence Transformers: Converts documents and queries into embeddings for semantic similarity with ChromaDB.
+## Features
+- PDF upload and text extraction
+- Question-answering over document content using Hugging Face Transformers QA pipeline
+- Simple web interface
 
+## Tech Stack
+- Python
+- Hugging Face Transformers (QA pipeline)
+- (Streamlit / Flask — whichever you actually used for the interface)
+
+## Status / Future Improvements
+- Currently uses Hugging Face's QA pipeline; exploring LangChain + vector search (ChromaDB) for better context retrieval on longer documents
+- Answer accuracy varies with document complexity — refinement in progress
+
+## How to Run
+1. Install dependencies: `pip install -r requirements.txt`
+2. Run `python app.py` (or `streamlit run app.py`)
+3. Upload a PDF and ask a question
