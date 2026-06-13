@@ -1,4 +1,4 @@
-# Document Q&A Assistant
+# Gen AI
 
 Upload a PDF and ask questions about its content — the app extracts relevant context and returns an answer using a question-answering model.
 
