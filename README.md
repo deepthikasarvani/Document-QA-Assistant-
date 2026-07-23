@@ -1,22 +1,33 @@
-# Gen AI
+# 📄 Document QA — AI Document Assistant
 
-Upload a PDF and ask questions about its content — the app extracts relevant context and returns an answer using a question-answering model.
+Upload any PDF or text file and ask questions — AI answers directly from your document.
 
-## Features
-- PDF upload and text extraction
-- Question-answering over document content using Hugging Face Transformers QA pipeline
-- Simple web interface
+## What it does
+- Upload a PDF or TXT file
+- Ask any question about the document
+- AI reads the document and answers accurately
+- Multi-turn conversation — ask multiple questions in one session
 
 ## Tech Stack
 - Python
-- Hugging Face Transformers (QA pipeline)
-- (Streamlit / Flask — whichever you actually used for the interface)
+- Streamlit
+- Groq API (LLaMA 3.3)
+- PyPDF2 (PDF text extraction)
 
-## Status / Future Improvements
-- Currently uses Hugging Face's QA pipeline; exploring LangChain + vector search (ChromaDB) for better context retrieval on longer documents
-- Answer accuracy varies with document complexity — refinement in progress
+## How to run
+1. Clone the repo
+2. Install dependencies:
+   `pip install streamlit groq python-dotenv PyPDF2`
+3. Create `.env` file:
+   `GROQ_API_KEY=your_groq_key_here`
+4. Run:
+   `python -m streamlit run app.py`
 
-## How to Run
-1. Install dependencies: `pip install -r requirements.txt`
-2. Run `python app.py` (or `streamlit run app.py`)
-3. Upload a PDF and ask a question
+## How it works
+This project uses RAG (Retrieval Augmented Generation) — the document text is extracted and passed as context to the LLM, allowing it to answer questions specifically from your content rather than general knowledge.
+
+## Use cases
+- Study notes summarization
+- Contract/legal document analysis
+- Research paper Q&A
+- Any document you need to understand fast
