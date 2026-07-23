@@ -1,55 +1,92 @@
-!pip install langchain transformers torch
-!pip install langchain langchain-community langchain-openai openai transforms torch
-!pip install cromadb
-!pip install sentence-transformers
-import chromadb
-from chromadb.config import settings
-from sentence_transformers import SentenceTransformer
-chroma_client = chromadb.Client(Settings(anonymized_telemetry=False))
-collection = chroma_client.get_or_create_collection(name="docs")
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-document_text = """ 
-Generative AI referes to artificial intelligence models that can generate new content,
-like text, images, or music, based on patterns learned from input data.
-It is commonly used in creating realistic text, images, and other content with minimal input.
-Generative AI models include GPT-4 and DALL-E, which are used for writing articles, creating images, and even programming.
-"""
-document_embedding = embedding_model.encode(document_text)
-collection.add(
-   documents=[document_text],
-   embeddings=[document_embedding.tolist()]
-   ids=["genai_doc_1"]
+import streamlit as st
+from groq import Groq
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+import PyPDF2
+import io
+
+load_dotenv(Path('C:/Users/siri6/Desktop/Desktop/document-qa/.env'))
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+st.set_page_config(
+    page_title="Document QA",
+    page_icon="📄",
+    layout="centered"
 )
 
-question = "What is Generative AI?"
-question_embedding = embedding_model.encode(question)
+st.title("📄 Document QA")
+st.caption("Upload any document and ask questions — AI will answer from the content.")
+st.divider()
 
-results = collection.query(
-   query_embeddings=[question_embedding.tolist()]
-   n_results=1
+uploaded_file = st.file_uploader(
+    "Upload your document",
+    type=["pdf", "txt"]
 )
-relevant_doc = results["documents"][0][0]
 
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import ConversationChain
-from transformers import pipeline
+if uploaded_file:
+    # Extract text
+    if uploaded_file.type == "application/pdf":
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.read()))
+        doc_text = ""
+        for page in pdf_reader.pages:
+            doc_text += page.extract_text()
+    else:
+        doc_text = uploaded_file.read().decode("utf-8", errors="ignore")
 
-qa_pipeline = pipeline("question-answering")
-document_text="""
-Generative AI referes to artificial intelligence models that can generate new content,
-like text, images, or music, based on patterns learned from input data.
-It is commonly used in creating realistic text, images, and other content with minimal input.
-Generative AI models include GPT-4 and DALL-E, which are used for writing articles, creating images, and even programming.
-"""
+    st.success(f"✅ Document loaded — {len(doc_text)} characters")
+    st.session_state["doc_text"] = doc_text
 
-question = "What is Generative AI?"
+    with st.expander("Preview document"):
+        st.text(doc_text[:500] + "..." if len(doc_text) > 500 else doc_text)
 
-result = qa_pipeline(question=question, context=document_text)
-print("Answer:", result['answer'])
+if "doc_text" in st.session_state:
+    st.divider()
+    st.subheader("Ask a question")
 
-model = ChatOpenAI(model="gpt-4", temperature=0.7)
-conversation_answer = ConversationChain(llm=model)
+    if "qa_messages" not in st.session_state:
+        st.session_state.qa_messages = []
 
-conversation_answer = conversation_chain.predict(input=f"Document:\n{document_text}\n\nQuestion: {question}")
-print("LangChain Answer:", conversation_answer)
+    for msg in st.session_state.qa_messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
+    question = st.chat_input("Ask anything about your document...")
+
+    if question:
+        st.session_state.qa_messages.append({
+            "role": "user",
+            "content": question
+        })
+
+        with st.chat_message("user"):
+            st.markdown(question)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Reading document..."):
+                prompt = f"""You are a helpful document assistant.
+Answer the user's question based ONLY on the document provided.
+If the answer is not in the document, say "I couldn't find that in the document."
+
+DOCUMENT:
+{st.session_state['doc_text'][:4000]}
+
+QUESTION: {question}
+
+Give a clear, concise answer."""
+
+                response = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=500
+                )
+                answer = response.choices[0].message.content
+                st.markdown(answer)
+
+        st.session_state.qa_messages.append({
+            "role": "assistant",
+            "content": answer
+        })
+
+else:
+    st.info("👆 Upload a document to get started")
